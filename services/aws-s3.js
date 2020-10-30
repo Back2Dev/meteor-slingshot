@@ -146,6 +146,8 @@ Slingshot.S3Storage = {
     var storeClass = directive.storageClass || "STANDARD";
     payload["x-amz-storage-class"] = storeClass;
 
+    this.applyEncryption(payload, meta);
+
     this.applySignature(payload, policy, directive);
 
     return {
@@ -228,6 +230,49 @@ Slingshot.S3Storage = {
 
     return hmac256(signingKey, policy, "hex");
   },
+
+  /** Generate AWS Server-Side Encryption headers
+   *
+   * @param {Object} payload - Data to be upload along with file
+   * @param {Object} meta - Includes SSE encryption settings in meta.sse
+   */
+
+  applyEncryption: function (payload, meta) {
+    var encryptionData = {},
+      sse;
+
+    if (meta && meta.sse) {
+      sse = meta.sse;
+
+      if (sse.key) {
+        encryptionData = {
+          "x-amz-server-side-encryption-customer-algorithm": "AES256",
+          "x-amz-server-side-encryption-customer-key": new Buffer(
+            sse.key
+          ).toString("base64"),
+          "x-amz-server-side-encryption-customer-key-MD5": md5(
+            sse.key,
+            "base64"
+          ),
+        };
+      } else if (sse.kms && sse.kmsKeyId) {
+        encryptionData = {
+          "x-amz-server-side-encryption": "aws:kms",
+          "x-amz-server-side-encryption-aws-kms-key-id": sse.kmsKeyId,
+        };
+      } else if (sse.kms) {
+        encryptionData = {
+          "x-amz-server-side-encryption": "aws:kms",
+        };
+      } else if (sse) {
+        encryptionData = {
+          "x-amz-server-side-encryption": "AES256",
+        };
+      }
+
+      _.extend(payload, encryptionData);
+    }
+  },
 };
 
 Slingshot.S3Storage.TempCredentials = _.defaults(
@@ -287,6 +332,14 @@ function formatNumber(num, digits) {
 }
 
 var crypto = Npm.require("crypto");
+
+function md5(data, encoding) {
+  /* global Buffer: false */
+  return crypto
+    .createHash("md5")
+    .update(new Buffer(data, "utf-8"))
+    .digest(encoding);
+}
 
 function hmac256(key, data, encoding) {
   /* global Buffer: false */
