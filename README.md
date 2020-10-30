@@ -60,7 +60,7 @@ Slingshot.fileRestrictions("myFileUploads", {
 });
 ```
 
-Important: The `fileRestrictions` must be declared before the the directive is instantiated.
+Important: The `fileRestrictions` must be declared before the directive is instantiated.
 
 ### Server side
 
