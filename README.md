@@ -1,5 +1,4 @@
-meteor-slingshot
-================
+# meteor-slingshot
 
 [![](https://api.travis-ci.org/CulturalMe/meteor-slingshot.svg)](https://travis-ci.org/CulturalMe/meteor-slingshot) [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/CulturalMe/meteor-slingshot?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
 
@@ -61,7 +60,7 @@ Slingshot.fileRestrictions("myFileUploads", {
 });
 ```
 
-Important: The `fileRestrictions` must be declared before the the directive is instantiated.
+Important: The `fileRestrictions` must be declared before the directive is instantiated.
 
 ### Server side
 
@@ -69,9 +68,12 @@ On the server we declare a directive that controls upload access rules:
 
 ```JavaScript
 Slingshot.createDirective("myFileUploads", Slingshot.S3Storage, {
-  bucket: "mybucket",
+  bucket: "mybucket", // This may be a String or a function
 
   acl: "public-read",
+
+  // 'STANDARD' or 'REDUCED_REDUNDANCY'
+  storageClass: 'REDUCED_REDUNDANCY', 
 
   authorize: function () {
     //Deny uploads if user is not logged in.
@@ -190,7 +192,8 @@ Slingshot.createDirective("picturealbum", Slingshot.GoogleCloud, {
   }
 });
 ```
-## Manual Client Side  validation
+
+## Manual Client Side validation
 
 You can check if a file uploadable according to file-restrictions as follows:
 
@@ -206,26 +209,31 @@ if (error) {
 The validate method will return `null` if valid and returns an `Error` instance
 if validation fails.
 
-
 ### AWS S3
 
 You will need a`AWSAccessKeyId` and `AWSSecretAccessKey` in `Meteor.settings`
 and a bucket with the following CORS configuration:
 
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<CORSConfiguration xmlns="http://s3.amazonaws.com/doc/2006-03-01/">
-    <CORSRule>
-        <AllowedOrigin>*</AllowedOrigin>
-        <AllowedMethod>PUT</AllowedMethod>
-        <AllowedMethod>POST</AllowedMethod>
-        <AllowedMethod>GET</AllowedMethod>
-        <AllowedMethod>HEAD</AllowedMethod>
-        <MaxAgeSeconds>3000</MaxAgeSeconds>
-        <AllowedHeader>*</AllowedHeader>
-    </CORSRule>
-</CORSConfiguration>
-```
+````json
+[
+    {
+        "AllowedHeaders": [
+            "Authorization"
+        ],
+        "AllowedMethods": [
+            "PUT",
+            "GET",
+            "POST",
+            "HEAD",
+            "DELETE"
+        ],
+        "AllowedOrigins": [
+            "your-server-goes-here"
+        ],
+        "ExposeHeaders": [],
+        "MaxAgeSeconds": 3000
+    }
+]```
 
 Declare AWS S3 Directives as follows:
 
@@ -233,7 +241,7 @@ Declare AWS S3 Directives as follows:
 Slingshot.createDirective("aws-s3-example", Slingshot.S3Storage, {
   //...
 });
-```
+````
 
 #### S3 with temporary AWS Credentials (Advanced)
 
@@ -282,6 +290,22 @@ Slingshot.createDirective('myUploads', Slingshot.S3Storage.TempCredentials, {
 });
 ```
 
+#### S3 Server-Side Encryption (SSE)
+
+You can enable server-side encryption by setting the "sse" key in the metaContext accordingly.
+
+```JavaScript
+var uploadToMyAlbum = new Slingshot.Upload("picturealbum", {
+  sse: true
+});
+```
+The "sse" key can take one of the following values:
+```JavaScript
+true //enables AWS-managed AES-256 encryption keys
+{kms: true, kmsKeyId: YOUR_KMS_KEY_ID} //enables AWS-managed KMS encryption keys. If the kmsKeyId is not specified, the master key will be used
+{key: YOUR_AES256_KEY} //enables SSE with customer-provided keys
+```
+
 ### Google Cloud
 
 [Generate a private key](http://goo.gl/kxt5qz) and convert it to a `.pem` file
@@ -303,6 +327,7 @@ line to your server-side code:
 ```JavaScript
 Slingshot.GoogleCloud.directiveDefault.GoogleSecretKey = Assets.getText('google-cloud-service-key.pem');
 ```
+
 Declare Google Cloud Storage Directives as follows:
 
 ```JavaScript
@@ -353,7 +378,6 @@ curl -I -X POST -H 'X-Auth-Token: yourAuthToken' \
   -H 'X-Container-Meta-Access-Expose-Headers: etag location x-timestamp x-trans-id Access-Control-Allow-Origin' \
   https://storage101.containerRegion.clouddrive.com/v1/MossoCloudFS_yourAccoountNumber/yourContainer
 ```
-
 
 ### Cloudinary
 
@@ -483,10 +507,10 @@ Slingshot.createDirective("myUploads", MyStorageService, {
 
 Meteor core packages:
 
- * underscore
- * tracker
- * reactive-var
- * check
+- underscore
+- tracker
+- reactive-var
+- check
 
 ## Troubleshooting and Help
 
@@ -517,8 +541,17 @@ authorization will expire after the request was made. Default is 5 minutes.
 
 #### AWS S3 (`Slingshot.S3Storage`)
 
-`region` String (optional) - Default is `Meteor.settings.AWSRegion` or
+`bucket` String or Function (**required**) - Name of bucket to use. For AWS S3
+the default bucket is `Meteor.settings.S3Bucket`.
+If a function is provided, it will be called with `userId` in the context and
+its return value is used as the bucket. First argument is file info and the
+second is the meta-information that can be passed by the client.
+
+`region` String or Function(optional) - Default is `Meteor.settings.AWSRegion` or
 "us-east-1". [See AWS Regions](http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region)
+If a function is provided, it will be called with `userId` in the context and
+its return value is used as the region. First argument is file info and the
+second is the meta-information that can be passed by the client.
 
 `AWSAccessKeyId` String (**required**) - Can also be set in `Meteor.settings`.
 
@@ -526,8 +559,17 @@ authorization will expire after the request was made. Default is 5 minutes.
 
 #### AWS S3 with Temporary Credentials (`Slingshot.S3Storage.TempCredentials`)
 
-`region` String (optional) - Default is `Meteor.settings.AWSRegion` or
+`bucket` String or Function (**required**) - Name of bucket to use. For AWS S3
+the default bucket is `Meteor.settings.S3Bucket`.
+If a function is provided, it will be called with `userId` in the context and
+its return value is used as the bucket. First argument is file info and the
+second is the meta-information that can be passed by the client.
+
+`region` String or Function(optional) - Default is `Meteor.settings.AWSRegion` or
 "us-east-1". [See AWS Regions](http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region)
+If a function is provided, it will be called with `userId` in the context and
+its return value is used as the region. First argument is file info and the
+second is the meta-information that can be passed by the client.
 
 `temporaryCredentials` Function (**required**) - Function that generates temporary
 credentials. It takes a signle argument, which is the minumum desired expiration
@@ -545,13 +587,9 @@ time in milli-seconds and it returns an object that contains `AccessKeyId`,
 
 #### AWS S3 and Google Cloud Storage
 
-`bucket` String (**required**) - Name of bucket to use. The default is
-`Meteor.settings.GoogleCloudBucket`. For AWS S3 the default bucket is
-`Meteor.settings.S3Bucket`.
-
 `bucketUrl` String or Function (optional) - Override URL to which files are
- uploaded. If it is a function, then the first argument is the bucket name. This
- url also used for downloads unless a cdn is given.
+uploaded. If it is a function, then the first argument is the bucket name. This
+url also used for downloads unless a cdn is given.
 
 `key` String or Function (**required**) - Name of the file on the cloud storage
 service. If a function is provided, it will be called with `userId` in the
