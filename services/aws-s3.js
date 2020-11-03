@@ -1,8 +1,8 @@
-import { _ } from "meteor/underscore";
+import { _ } from 'meteor/underscore'
 
 Slingshot.S3Storage = {
-  accessId: "AWSAccessKeyId",
-  secretKey: "AWSSecretAccessKey",
+  accessId: 'AWSAccessKeyId',
+  secretKey: 'AWSSecretAccessKey',
 
   directiveMatch: {
     bucket: Match.OneOf(String, Function),
@@ -12,7 +12,7 @@ Slingshot.S3Storage = {
       return (
         (Match.test(region, String) && /^[a-z]{2}-\w+-\d+$/.test(region)) ||
         Match.test(region, Function)
-      );
+      )
     }),
 
     AWSAccessKeyId: String,
@@ -23,73 +23,66 @@ Slingshot.S3Storage = {
 
     acl: Match.Optional(
       Match.Where(function (acl) {
-        check(acl, String);
+        check(acl, String)
 
         return (
           [
-            "private",
-            "public-read",
-            "public-read-write",
-            "authenticated-read",
-            "bucket-owner-read",
-            "bucket-owner-full-control",
-            "log-delivery-write",
+            'private',
+            'public-read',
+            'public-read-write',
+            'authenticated-read',
+            'bucket-owner-read',
+            'bucket-owner-full-control',
+            'log-delivery-write',
           ].indexOf(acl) >= 0
-        );
+        )
       })
     ),
 
     key: Match.OneOf(String, Function),
 
     expire: Match.Where(function (expire) {
-      check(expire, Number);
+      check(expire, Number)
 
-      return expire > 0;
+      return expire > 0
     }),
 
     cacheControl: Match.Optional(String),
     contentDisposition: Match.Optional(Match.OneOf(String, Function, null)),
   },
 
-  directiveDefault: _.chain(Meteor.settings.private)
-    .pick("AWSAccessKeyId", "AWSSecretAccessKey")
-    .extend({
-      bucket: Meteor.settings.S3Bucket,
-      bucketUrl: function (bucket, region) {
-        var bucketDomain = "s3-" + region + ".amazonaws.com";
-        if (region === "us-east-1") bucketDomain = "s3.amazonaws.com";
-        if (region === "cn-north-1")
-          bucketDomain = "s3.cn-north-1.amazonaws.com.cn";
+  directiveDefault: {
+    AWSAccessKeyId: Meteor.settings.AWSAccessKeyId,
+    AWSSecretAccessKey: Meteor.settings.AWSSecretAccessKey,
+    bucket: Meteor.settings.S3Bucket,
+    bucketUrl: function (bucket, region) {
+      var bucketDomain = 's3-' + region + '.amazonaws.com'
+      if (region === 'us-east-1') bucketDomain = 's3.amazonaws.com'
+      if (region === 'cn-north-1') bucketDomain = 's3.cn-north-1.amazonaws.com.cn'
 
-        if (bucket.indexOf(".") !== -1)
-          return "https://" + bucketDomain + "/" + bucket;
+      if (bucket.indexOf('.') !== -1) return 'https://' + bucketDomain + '/' + bucket
 
-        return "https://" + bucket + "." + bucketDomain;
-      },
-      region: Meteor.settings.AWSRegion || "us-east-1",
-      expire: 5 * 60 * 1000, //in 5 minutes
-    })
-    .value(),
-
+      return 'https://' + bucket + '.' + bucketDomain
+    },
+    region: Meteor.settings.AWSRegion || 'us-east-1',
+    expire: 5 * 60 * 1000, //in 5 minutes
+  },
   getContentDisposition: function (method, directive, file, meta) {
-    var getContentDisposition = directive.contentDisposition;
+    var getContentDisposition = directive.contentDisposition
 
-    if (!_.isFunction(getContentDisposition)) {
+    if (typeof getContentDisposition !== 'function') {
       getContentDisposition = function () {
-        var filename = file.name && encodeURIComponent(file.name);
+        var filename = file.name && encodeURIComponent(file.name)
 
         return (
           directive.contentDisposition ||
           (filename &&
-            'inline; filename="' +
-              filename +
-              "\"; filename*=utf-8''" +
-              filename)
-        );
-      };
+            'inline; filename="' + filename + "\"; filename*=utf-8''" + filename)
+        )
+      }
     }
 
-    return getContentDisposition.call(method, file, meta);
+    return getContentDisposition.call(method, file, meta)
   },
 
   /**
@@ -103,76 +96,75 @@ Slingshot.S3Storage = {
    */
 
   upload: function (method, directive, file, meta) {
-    var bucket = _.isFunction(directive.bucket)
-        ? directive.bucket.call(method, file, meta)
-        : directive.bucket,
-      region = _.isFunction(directive.region)
-        ? directive.region.call(method, file, meta)
-        : directive.region,
+    var bucket =
+        typeof directive.bucket === 'function'
+          ? directive.bucket.call(method, file, meta)
+          : directive.bucket,
+      region =
+        typeof directive.region === 'function'
+          ? directive.region.call(method, file, meta)
+          : directive.region,
       policy = new Slingshot.StoragePolicy()
         .expireIn(directive.expire)
         .contentLength(0, Math.min(file.size, directive.maxSize || Infinity)),
       payload = {
-        key: _.isFunction(directive.key)
-          ? directive.key.call(method, file, meta)
-          : directive.key,
+        key:
+          typeof directive.key === 'function'
+            ? directive.key.call(method, file, meta)
+            : directive.key,
 
         bucket: bucket,
 
-        "Content-Type": file.type,
+        'Content-Type': file.type,
         acl: directive.acl,
 
-        "Cache-Control": directive.cacheControl,
-        "Content-Disposition": this.getContentDisposition(
-          method,
-          directive,
-          file,
-          meta
-        ),
+        'Cache-Control': directive.cacheControl,
+        'Content-Disposition': this.getContentDisposition(method, directive, file, meta),
       },
-      bucketUrl = _.isFunction(directive.bucketUrl)
-        ? directive.bucketUrl(bucket, region)
-        : directive.bucketUrl,
+      bucketUrl =
+        typeof directive.bucketUrl === 'function'
+          ? directive.bucketUrl(bucket, region)
+          : directive.bucketUrl,
       downloadUrl = [directive.cdn || bucketUrl, payload.key]
         .map(function (part) {
-          return part.replace(/\/+$/, "");
+          return part.replace(/\/+$/, '')
         })
-        .join("/");
+        .join('/')
 
     // The type of storage to use for the object. Defaults to 'STANDARD'.
     // Possible values include:
     // "STANDARD"
     // "REDUCED_REDUNDANCY"
-    var storeClass = directive.storageClass || "STANDARD";
-    payload["x-amz-storage-class"] = storeClass;
+    var storeClass = directive.storageClass || 'STANDARD'
+    payload['x-amz-storage-class'] = storeClass
 
-    this.applyEncryption(payload, meta);
+    this.applyEncryption(payload, meta)
 
-    this.applySignature(payload, policy, directive);
+    this.applySignature(region, payload, policy, directive)
 
     return {
       upload: bucketUrl,
       download: downloadUrl,
       postData: [
         {
-          name: "key",
+          name: 'key',
           value: payload.key,
         },
       ].concat(
         _.chain(payload)
-          .omit("key")
+          .omit('key')
           .map(function (value, name) {
             return (
               !_.isUndefined(value) && {
                 name: name,
                 value: value,
               }
-            );
+            )
           })
           .compact()
           .value()
       ),
-    };
+    }
   },
 
   /** Applies signature an upload payload
@@ -188,28 +180,28 @@ Slingshot.S3Storage = {
         now.getUTCFullYear() +
         formatNumber(now.getUTCMonth() + 1, 2) +
         formatNumber(now.getUTCDate(), 2),
-      service = "s3";
-    console.log(region, payload, policy, directive);
+      service = 's3'
+
     _.extend(payload, {
-      "x-amz-algorithm": "AWS4-HMAC-SHA256",
-      "x-amz-credential": [
+      'x-amz-algorithm': 'AWS4-HMAC-SHA256',
+      'x-amz-credential': [
         directive[this.accessId],
         today,
         region,
         service,
-        "aws4_request",
-      ].join("/"),
-      "x-amz-date": today + "T000000Z",
-    });
+        'aws4_request',
+      ].join('/'),
+      'x-amz-date': today + 'T000000Z',
+    })
 
-    payload.policy = policy.match(payload).stringify();
-    payload["x-amz-signature"] = this.signAwsV4(
+    payload.policy = policy.match(payload).stringify()
+    payload['x-amz-signature'] = this.signAwsV4(
       payload.policy,
       directive[this.secretKey],
       today,
       region,
       service
-    );
+    )
   },
 
   /** Generate a AWS Signature Version 4
@@ -223,12 +215,12 @@ Slingshot.S3Storage = {
    */
 
   signAwsV4: function (policy, secretKey, date, region, service) {
-    var dateKey = hmac256("AWS4" + secretKey, date),
+    var dateKey = hmac256('AWS4' + secretKey, date),
       dateRegionKey = hmac256(dateKey, region),
       dateRegionServiceKey = hmac256(dateRegionKey, service),
-      signingKey = hmac256(dateRegionServiceKey, "aws4_request");
+      signingKey = hmac256(dateRegionServiceKey, 'aws4_request')
 
-    return hmac256(signingKey, policy, "hex");
+    return hmac256(signingKey, policy, 'hex')
   },
 
   /** Generate AWS Server-Side Encryption headers
@@ -239,46 +231,43 @@ Slingshot.S3Storage = {
 
   applyEncryption: function (payload, meta) {
     var encryptionData = {},
-      sse;
+      sse
 
     if (meta && meta.sse) {
-      sse = meta.sse;
+      sse = meta.sse
 
       if (sse.key) {
         encryptionData = {
-          "x-amz-server-side-encryption-customer-algorithm": "AES256",
-          "x-amz-server-side-encryption-customer-key": new Buffer(
-            sse.key
-          ).toString("base64"),
-          "x-amz-server-side-encryption-customer-key-MD5": md5(
-            sse.key,
-            "base64"
+          'x-amz-server-side-encryption-customer-algorithm': 'AES256',
+          'x-amz-server-side-encryption-customer-key': new Buffer(sse.key).toString(
+            'base64'
           ),
-        };
+          'x-amz-server-side-encryption-customer-key-MD5': md5(sse.key, 'base64'),
+        }
       } else if (sse.kms && sse.kmsKeyId) {
         encryptionData = {
-          "x-amz-server-side-encryption": "aws:kms",
-          "x-amz-server-side-encryption-aws-kms-key-id": sse.kmsKeyId,
-        };
+          'x-amz-server-side-encryption': 'aws:kms',
+          'x-amz-server-side-encryption-aws-kms-key-id': sse.kmsKeyId,
+        }
       } else if (sse.kms) {
         encryptionData = {
-          "x-amz-server-side-encryption": "aws:kms",
-        };
+          'x-amz-server-side-encryption': 'aws:kms',
+        }
       } else if (sse) {
         encryptionData = {
-          "x-amz-server-side-encryption": "AES256",
-        };
+          'x-amz-server-side-encryption': 'AES256',
+        }
       }
 
-      _.extend(payload, encryptionData);
+      _.extend(payload, encryptionData)
     }
   },
-};
+}
 
 Slingshot.S3Storage.TempCredentials = _.defaults(
   {
     directiveMatch: _.chain(Slingshot.S3Storage.directiveMatch)
-      .omit("AWSAccessKeyId", "AWSSecretAccessKey")
+      .omit('AWSAccessKeyId', 'AWSSecretAccessKey')
       .extend({
         temporaryCredentials: Function,
       })
@@ -286,24 +275,23 @@ Slingshot.S3Storage.TempCredentials = _.defaults(
 
     directiveDefault: _.omit(
       Slingshot.S3Storage.directiveDefault,
-      "AWSAccessKeyId",
-      "AWSSecretAccessKey"
+      'AWSAccessKeyId',
+      'AWSSecretAccessKey'
     ),
 
     applySignature: function (region, payload, policy, directive) {
-      var credentials = directive.temporaryCredentials(directive.expire);
+      var credentials = directive.temporaryCredentials(directive.expire)
 
       check(
         credentials,
         Match.ObjectIncluding({
           AccessKeyId: Slingshot.S3Storage.directiveMatch.AWSAccessKeyId,
-          SecretAccessKey:
-            Slingshot.S3Storage.directiveMatch.AWSSecretAccessKey,
+          SecretAccessKey: Slingshot.S3Storage.directiveMatch.AWSSecretAccessKey,
           SessionToken: String,
         })
-      );
+      )
 
-      payload["x-amz-security-token"] = credentials.SessionToken;
+      payload['x-amz-security-token'] = credentials.SessionToken
 
       return Slingshot.S3Storage.applySignature.call(
         this,
@@ -317,34 +305,31 @@ Slingshot.S3Storage.TempCredentials = _.defaults(
           },
           directive
         )
-      );
+      )
     },
   },
   Slingshot.S3Storage
-);
+)
 
 function formatNumber(num, digits) {
-  var string = String(num);
+  var string = String(num)
 
   return Array(digits - string.length + 1)
-    .join("0")
-    .concat(string);
+    .join('0')
+    .concat(string)
 }
 
-var crypto = Npm.require("crypto");
+var crypto = Npm.require('crypto')
 
 function md5(data, encoding) {
   /* global Buffer: false */
-  return crypto
-    .createHash("md5")
-    .update(new Buffer(data, "utf-8"))
-    .digest(encoding);
+  return crypto.createHash('md5').update(new Buffer(data, 'utf-8')).digest(encoding)
 }
 
 function hmac256(key, data, encoding) {
   /* global Buffer: false */
   return crypto
-    .createHmac("sha256", key)
-    .update(Buffer.from(data, "utf-8"))
-    .digest(encoding);
+    .createHmac('sha256', key)
+    .update(Buffer.from(data, 'utf-8'))
+    .digest(encoding)
 }
