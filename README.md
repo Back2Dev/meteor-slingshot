@@ -4,6 +4,10 @@
 
 Direct and secure file-uploads to AWS S3, Google Cloud Storage and others.
 
+## Looking for maintainers
+
+Please contact mikkelking if you can help maintaining this package
+
 ## Install
 
 ```bash
