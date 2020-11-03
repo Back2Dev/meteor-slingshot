@@ -51,7 +51,7 @@ Slingshot.S3Storage = {
     contentDisposition: Match.Optional(Match.OneOf(String, Function, null)),
   },
 
-  directiveDefault: _.chain(Meteor.settings)
+  directiveDefault: _.chain(Meteor.settings.private)
     .pick("AWSAccessKeyId", "AWSSecretAccessKey")
     .extend({
       bucket: Meteor.settings.S3Bucket,
@@ -189,7 +189,7 @@ Slingshot.S3Storage = {
         formatNumber(now.getUTCMonth() + 1, 2) +
         formatNumber(now.getUTCDate(), 2),
       service = "s3";
-
+    console.log(region, payload, policy, directive);
     _.extend(payload, {
       "x-amz-algorithm": "AWS4-HMAC-SHA256",
       "x-amz-credential": [
