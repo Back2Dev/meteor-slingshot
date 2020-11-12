@@ -1,5 +1,5 @@
 Package.describe({
-  name: 'edgee:slingshot',
+  name: 'mikkelking:slingshot',
   summary: 'Directly post files to cloud storage services, such as AWS-S3.',
   version: '1.0.0',
   git: 'https://github.com/Back2bikes/meteor-slingshot',
@@ -31,14 +31,14 @@ Package.on_use(function (api) {
 })
 
 // Package.on_test(function (api) {
-//   api.use(["tinytest", "underscore", "edgee:slingshot"]);
+//   api.use(["tinytest", "underscore", "mikkelking:slingshot"]);
 //   api.add_files("test/aws-s3.js", "server");
 // });
 
 Package.onTest(function (api) {
   // You almost definitely want to depend on the package itself,
   // this is what you are testing!
-  api.use('edgee:slingshot')
+  api.use('mikkelking:slingshot')
 
   // You should also include any packages you need to use in the test code
   api.use(['ecmascript', 'random', 'meteortesting:mocha'])
