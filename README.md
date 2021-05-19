@@ -218,7 +218,7 @@ if validation fails.
 You will need a`AWSAccessKeyId` and `AWSSecretAccessKey` in `Meteor.settings`
 and a bucket with the following CORS configuration:
 
-````json
+```json
 [
     {
         "AllowedHeaders": [
@@ -237,7 +237,8 @@ and a bucket with the following CORS configuration:
         "ExposeHeaders": [],
         "MaxAgeSeconds": 3000
     }
-]```
+]
+```
 
 Declare AWS S3 Directives as follows:
 
@@ -245,7 +246,7 @@ Declare AWS S3 Directives as follows:
 Slingshot.createDirective("aws-s3-example", Slingshot.S3Storage, {
   //...
 });
-````
+```
 
 #### S3 with temporary AWS Credentials (Advanced)
 
