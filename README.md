@@ -11,7 +11,7 @@ Please contact mikkelking if you can help maintaining this package
 ## Install
 
 ```bash
-meteor add edgee:slingshot
+meteor add mikkelking:slingshot
 ```
 
 ## Why?
