@@ -235,6 +235,32 @@ Slingshot.createDirective("aws-s3-example", Slingshot.S3Storage, {
 });
 ```
 
+### Azure Blob
+
+You will need a`AzureStorageConnectionString` and `AzureAccountName` in `Meteor.settings`
+and a container with the following CORS configuration:
+
+```xml
+<CORSRule>
+  <AllowedOrigin>*</AllowedOrigin>
+  <AllowedMethod>PUT</AllowedMethod>
+  <AllowedMethod>POST</AllowedMethod>
+  <AllowedMethod>GET</AllowedMethod>
+  <AllowedMethod>HEAD</AllowedMethod>
+  <MaxAgeSeconds>3000</MaxAgeSeconds>
+  <AllowedHeader>*</AllowedHeader>
+</CORSRule>
+```
+
+Declare Azure Blob Directives as follows:
+
+```JavaScript
+Slingshot.createDirective("aws-s3-example", Slingshot.AzureBlobStorage, {
+  container: Meteor.settings.AzureContainerName,
+  //...
+});
+```
+
 #### S3 with temporary AWS Credentials (Advanced)
 
 For extra security you can use
@@ -357,7 +383,7 @@ curl -I -X POST -H 'X-Auth-Token: yourAuthToken' \
 
 ### Cloudinary
 
-Cloudinary is supported via a 3rd party package.  
+Cloudinary is supported via a 3rd party package.
 [jimmiebtlr:cloudinary](https://atmospherejs.com/jimmiebtlr/slingshot-cloudinary)
 
 ## Browser Compatibility

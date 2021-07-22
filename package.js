@@ -1,9 +1,16 @@
 Package.describe({
-  name: "edgee:slingshot",
+  name: "rsm:slingshot",
   summary: "Directly post files to cloud storage services, such as AWS-S3.",
   version: "0.7.1",
-  git: "https://github.com/CulturalMe/meteor-slingshot"
+  git: "https://github.com/rsmoorthy/meteor-slingshot"
 });
+
+/*
+  "@azure/storage-blob": "12.0.0"
+*/
+Npm.depends({
+  "azure-storage": "2.10.4",
+})
 
 Package.on_use(function (api) {
   api.versionsFrom('METEOR@1.0');
@@ -22,6 +29,7 @@ Package.on_use(function (api) {
     "lib/directive.js",
     "lib/storage-policy.js",
     "services/aws-s3.js",
+    "services/azure-blob.js",
     "services/google-cloud.js",
     "services/rackspace.js"
   ], "server");

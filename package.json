@@ -1,0 +1,24 @@
+{
+  "name": "rsm_slingshot",
+  "version": "1.0.0",
+  "description": "meteor-slingshot ================",
+  "main": "package.js",
+  "directories": {
+    "doc": "docs",
+    "lib": "lib",
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rsmoorthy/meteor-slingshot.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/rsmoorthy/meteor-slingshot/issues"
+  },
+  "homepage": "https://github.com/rsmoorthy/meteor-slingshot#readme"
+}
