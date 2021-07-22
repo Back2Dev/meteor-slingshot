@@ -257,7 +257,7 @@ and a container with the following CORS configuration:
 Declare Azure Blob Directives as follows:
 
 ```JavaScript
-Slingshot.createDirective("aws-s3-example", Slingshot.AzureBlobStorage, {
+Slingshot.createDirective("azure-blob-example", Slingshot.AzureBlobStorage, {
   container: Meteor.settings.AzureContainerName,
   //...
 });
