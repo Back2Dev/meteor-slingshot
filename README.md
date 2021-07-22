@@ -1,14 +1,16 @@
-meteor-slingshot
+meteor-slingshot  (Forked, Added support for Azure Blob)
 ================
 
-[![](https://api.travis-ci.org/CulturalMe/meteor-slingshot.svg)](https://travis-ci.org/CulturalMe/meteor-slingshot) [![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/CulturalMe/meteor-slingshot?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-Direct and secure file-uploads to AWS S3, Google Cloud Storage and others.
+Direct and secure file-uploads to AWS S3, Azure Blob, Google Cloud Storage and others.
 
 ## Install
 
 ```bash
-meteor add edgee:slingshot
+mkdir packages
+cd packages
+git clone https://github.com/rsmoorthy/meteor-slingshot.git rsm:slingshot
+cd ..
+meteor add rsm:slingshot
 ```
 
 ## Why?

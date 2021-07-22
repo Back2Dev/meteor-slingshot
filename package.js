@@ -1,7 +1,7 @@
 Package.describe({
   name: "rsm:slingshot",
-  summary: "Directly post files to cloud storage services, such as AWS-S3.",
-  version: "0.7.1",
+  summary: "Directly post files to cloud storage services, such as AWS-S3 including Azure Blob.",
+  version: "0.7.2",
   git: "https://github.com/rsmoorthy/meteor-slingshot"
 });
 
