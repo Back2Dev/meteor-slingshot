@@ -1,14 +1,14 @@
 Package.describe({
   name: 'mikkelking:slingshot',
   summary: 'Directly post files to cloud storage services, such as AWS-S3.',
-  version: '1.0.2',
+  version: '1.0.3',
   git: 'https://github.com/Back2bikes/meteor-slingshot',
 })
 
 Package.onUse(function (api) {
   api.versionsFrom('METEOR@1.0')
 
-  api.use(['check', 'ecmascript'])
+  api.use(['check'])
   api.use(['underscore'], 'server')
   api.use(['tracker', 'reactive-var'], 'client')
 
@@ -31,6 +31,6 @@ Package.onUse(function (api) {
 })
 
 Package.onTest(function (api) {
-  api.use(['tinytest', 'underscore', 'edgee:slingshot'])
+  api.use(['tinytest', 'underscore', 'mikkelking:slingshot'])
   api.addFiles('test/aws-s3.js', 'server')
 })
