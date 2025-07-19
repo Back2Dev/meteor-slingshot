@@ -1,5 +1,9 @@
 # Slingshot Changelog
 
+## Version 1.0.2
+
+- Added an optional `id` parameter (provides context for the request)
+
 ## Version 1.0.0A
 
 ### Announcements
